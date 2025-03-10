@@ -1,6 +1,5 @@
 # PLC-Project
 
-# Overview:
 This repo has the code and docs for a simple Tic-Tac-Toe game. You can play against a friend or a basic computer player. It’s built with Python for the game rules and AI, and there’s an optional JavaScript version for playing in a browser.
 
 What’s inside:
