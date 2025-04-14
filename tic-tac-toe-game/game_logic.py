@@ -1,8 +1,3 @@
-"""
-Tic-Tac-Toe Game Logic
-Contains the core rules and AI for the game.
-"""
-
 class TicTacToe:
     """Main game class that handles all rules and state"""
     
