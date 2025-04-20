@@ -1,19 +1,22 @@
 # PLC-Project
 
-This repo has the code and docs for a simple Tic-Tac-Toe game. You can play against a friend or a basic computer player. It’s built with Python for the game rules and AI.
+Tic-Tac-Toe Web Game
+A classic Tic-Tac-Toe game you can play in your browser.
 
-What’s inside:
+Frontend: HTML/CSS/JavaScript
 
-The game code, ready to run.
+Backend: Python with Flask
 
-Info on how the game was tested and improved.
+Features:
 
-Great for learning game logic, user interaction, and basic AI! Clone it, play, and have fun.
+Play against a friend
 
-How to Use:
+Clear turn indicators
 
-Download the repo.
+Automatic win/tie detection
 
-Follow the setup guide.
+One-click reset
 
-Start playing!
+Just run python app.py to start the server, then open index.html to play!
+
+(Optionally add: "No installations needed - works in any modern browser!")
