@@ -6,8 +6,6 @@ What’s inside:
 
 The game code, ready to run.
 
-A guide (2-4 pages) on how to set up and play the game.
-
 Info on how the game was tested and improved.
 
 Great for learning game logic, user interaction, and basic AI! Clone it, play, and have fun.
