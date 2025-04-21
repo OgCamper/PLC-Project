@@ -1,3 +1,5 @@
+import random
+
 class TicTacToe:
     """Main game class that handles all rules and state"""
     
