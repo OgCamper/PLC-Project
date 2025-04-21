@@ -1,46 +1,55 @@
 // script.js
-// Front-end logic for Tic‑Tac‑Toe UI with optional AI opponent
+// UI logic with Dark‑Mode & AI‑Opponent support
+// — state uses GET, others use POST with JSON
 
 document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE_URL = 'http://localhost:5000';
-  const boardEl       = document.getElementById('board');
-  const statusEl      = document.getElementById('game-status');
-  const resetBtn      = document.getElementById('reset-button');
-  const aiToggle      = document.getElementById('ai-toggle');
+  const API_BASE = 'http://localhost:5000/api/game';
+  const boardEl    = document.getElementById('board');
+  const statusEl   = document.getElementById('game-status');
+  const resetBtn   = document.getElementById('reset-button');
+  const aiToggle   = document.getElementById('ai-toggle');
+  const darkToggle = document.getElementById('dark-toggle');
 
-  // Load initial game state
+  // Apply saved theme
+  if (localStorage.getItem('dark') === 'true') {
+    document.body.classList.add('dark');
+    darkToggle.checked = true;
+  }
+
+  darkToggle.addEventListener('change', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('dark', document.body.classList.contains('dark'));
+  });
+
+  // Initial load uses GET for state
   loadGameState();
 
-  // Handle cell clicks for human moves
-  boardEl.addEventListener('click', async (e) => {
-    const cell = e.target;
-    if (!cell.classList.contains('cell')) return;
-    const pos = parseInt(cell.dataset.index, 10);
+  resetBtn.addEventListener('click', async () => {
+    aiToggle.checked = false;
+    await resetGame();
+  });
 
-    // Make the human move
-    const humanResult = await makeMove(pos);
-    if (!humanResult) return;
+  boardEl.addEventListener('click', async e => {
+    if (!e.target.classList.contains('cell')) return;
+    const pos = +e.target.dataset.index;
 
-    // If playing vs AI and game not over, trigger AI move
-    if (aiToggle.checked && !humanResult.game_over) {
+    // Human move
+    const human = await makeMove(pos);
+    if (!human) return;
+
+    // AI move if enabled and game still ongoing
+    if (aiToggle.checked && !human.game_over) {
       await makeAIMove();
     }
   });
 
-  // Reset button handler
-  resetBtn.addEventListener('click', async () => {
-    aiToggle.checked = false;  // reset to two‑player by default
-    await resetGame();
-  });
-
-  // ─── API CALLS ─────────────────────────────────────────────────────────────
+  // ─── API FUNCTIONS ────────────────────────────────────
 
   async function loadGameState() {
     try {
-      const res   = await fetch(`${API_BASE_URL}/api/game/state`);
-      const state = await res.json();
-      updateBoard(state);
-      updateStatus(state);
+      const res  = await fetch(`${API_BASE}/state`, { method: 'GET' });
+      const data = await res.json();
+      render(data);
     } catch (err) {
       console.error('loadGameState error:', err);
       statusEl.textContent = 'Error loading game state.';
@@ -49,16 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function makeMove(position) {
     try {
-      const res    = await fetch(`${API_BASE_URL}/api/game/move`, {
+      const res = await fetch(`${API_BASE}/move`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ position })
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || res.status);
-      updateBoard(result);
-      updateStatus(result);
-      return result;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      render(data);
+      return data;
     } catch (err) {
       console.error('makeMove error:', err);
       statusEl.textContent = 'Invalid move or server error.';
@@ -68,14 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function makeAIMove() {
     try {
-      const res    = await fetch(`${API_BASE_URL}/api/game/ai_move`, {
-        method: 'POST'
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || res.status);
-      updateBoard(result);
-      updateStatus(result);
-      return result;
+      const res = await fetch(`${API_BASE}/ai_move`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      render(data);
+      return data;
     } catch (err) {
       console.error('makeAIMove error:', err);
       statusEl.textContent = 'AI move failed.';
@@ -85,25 +90,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function resetGame() {
     try {
-      const res   = await fetch(`${API_BASE_URL}/api/game/reset`, { method: 'POST' });
-      const state = await res.json();
-      updateBoard(state);
-      updateStatus(state);
+      const res  = await fetch(`${API_BASE}/reset`, { method: 'POST' });
+      const data = await res.json();
+      render(data);
     } catch (err) {
       console.error('resetGame error:', err);
       statusEl.textContent = 'Error resetting game.';
     }
   }
 
-  // ─── UI UPDATES ────────────────────────────────────────────────────────────
+  // ─── RENDERING ─────────────────────────────────────────
 
-  function updateBoard({ board }) {
-    document.querySelectorAll('.cell').forEach((cell, i) => {
-      cell.textContent = board[i] || '';
+  function render({ board, current_player, game_over, winner, winning_line }) {
+    // clear old highlights
+    document.querySelectorAll('.cell').forEach(c => {
+      c.classList.remove('win');
+      c.textContent = '';
     });
-  }
 
-  function updateStatus({ game_over, current_player, winner }) {
+    // draw new board
+    board.forEach((mark, i) => {
+      const cell = boardEl.children[i];
+      cell.textContent = mark !== ' ' ? mark : '';
+    });
+
+    // highlight winning line if any
+    if (game_over && Array.isArray(winning_line)) {
+      winning_line.forEach(i =>
+        boardEl.children[i].classList.add('win')
+      );
+    }
+
+    // update status
     if (game_over) {
       statusEl.textContent = winner
         ? `Game Over! Player ${winner} wins!`
